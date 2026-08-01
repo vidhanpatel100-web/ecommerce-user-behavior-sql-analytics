@@ -7,7 +7,7 @@ Rather than focusing on back-end ERP inventory, this project models **front-end 
 
 ---
 
-## 🏗️ Architecture & Data Lineage
+## Architecture & Data Lineage
 
 [ Raw GA4 Event CSV ]
 │
@@ -49,7 +49,7 @@ Rather than focusing on back-end ERP inventory, this project models **front-end 
 
 ---
 
-## 📊 Analytical Views & Key Insights
+## Analytical Views & Key Insights
 
 ### 1. Overall Conversion Funnel Quantification (`gold.cfq_drop_off`)
 * **Focus:** Quantifies user progression across key lifecycle events (`page_view` → `view_item` → `select_promotion`).
@@ -71,7 +71,7 @@ Rather than focusing on back-end ERP inventory, this project models **front-end 
 
 ---
 
-## 📁 Repository Structure
+## Repository Structure
 
 ```text
 ├── Script/

@@ -1,0 +1,260 @@
+/*
+===============================================================================
+Stored Procedure: Load Silver Layer (Bronze -> Silver)
+===============================================================================
+
+Script Purpose:
+    This stored procedure performs the ETL (Extract, Transform, Load) process to 
+    populate the 'silver' schema tables from the 'bronze' schema.
+
+Actions Performed:
+    - Truncates Silver tables.
+    - Inserts transformed and cleansed data from Bronze into Silver tables.
+
+Parameters:
+    None.
+    This stored procedure does not accept any parameters or return any values.
+
+Usage Example:
+    EXEC silver.proc_load_silver;
+
+===============================================================================
+*/
+
+CREATE OR ALTER PROCEDURE [silver].[proc_load_silver] AS
+BEGIN
+
+    DECLARE @start_time DATETIME, @end_time DATETIME, @batch_start_time DATETIME, @batch_end_time DATETIME;
+
+    BEGIN TRY
+        SET @batch_start_time = GETDATE();
+        PRINT '=================================================='
+        PRINT 'Loading Silver Layer'
+        PRINT '=================================================='
+
+        -----------------------------------------------------------------------
+        -- 1. Transform & Load Google Analytics Dataset
+        -----------------------------------------------------------------------
+        SET @start_time = GETDATE();
+        PRINT '>> Truncating Table: silver.google_analytics_data'
+        
+        TRUNCATE TABLE silver.google_analytics_data;
+
+        PRINT '>> Inserting Transformed Data into: silver.google_analytics_data'
+
+        INSERT INTO silver.google_analytics_data (
+            event_date,
+            event_timestamp,
+            event_name,
+            event_params_key,
+            event_params_value_string_value,
+            event_params_value_int_value,
+            event_params_value_float_value,
+            event_params_value_double_value,
+            event_previous_timestamp,
+            event_value_in_usd,
+            event_bundle_sequence_id,
+            event_server_timestamp_offset,
+            user_id,
+            user_pseudo_id,
+            privacy_info_analytics_storage,
+            privacy_info_ads_storage,
+            privacy_info_uses_transient_token,
+            user_properties_key,
+            user_properties_value_string_value,
+            user_properties_value_int_value,
+            user_properties_value_float_value,
+            user_properties_value_double_value,
+            user_properties_value_set_timestamp_micros,
+            user_first_touch_timestamp,
+            user_ltv_revenue,
+            user_ltv_currency,
+            device_category,
+            device_mobile_brand_name,
+            device_mobile_model_name,
+            device_mobile_marketing_name,
+            device_mobile_os_hardware_model,
+            device_operating_system,
+            device_operating_system_version,
+            device_vendor_id,
+            device_advertising_id,
+            device_language,
+            device_is_limited_ad_tracking,
+            device_time_zone_offset_seconds,
+            device_web_info_browser,
+            device_web_info_browser_version,
+            geo_continent,
+            geo_sub_continent,
+            geo_country,
+            geo_region,
+            geo_city,
+            geo_metro,
+            app_info_id,
+            app_info_version,
+            app_info_install_store,
+            app_info_firebase_app_id,
+            app_info_install_source,
+            traffic_source_medium,
+            traffic_source_name,
+            traffic_source_source,
+            stream_id,
+            platform,
+            event_dimensions_hostname,
+            ecommerce_total_item_quantity,
+            ecommerce_purchase_revenue_in_usd,
+            ecommerce_purchase_revenue,
+            ecommerce_refund_value_in_usd,
+            ecommerce_refund_value,
+            ecommerce_shipping_value_in_usd,
+            ecommerce_shipping_value,
+            ecommerce_tax_value_in_usd,
+            ecommerce_tax_value,
+            ecommerce_unique_items,
+            ecommerce_transaction_id,
+            items_item_id,
+            items_item_name,
+            items_item_brand,
+            items_item_variant,
+            items_item_category,
+            items_item_category2,
+            items_item_category3,
+            items_item_category4,
+            items_item_category5,
+            items_price_in_usd,
+            items_price,
+            items_quantity,
+            items_item_revenue_in_usd,
+            items_item_revenue,
+            items_item_refund_in_usd,
+            items_item_refund,
+            items_coupon,
+            items_affiliation,
+            items_location_id,
+            items_item_list_id,
+            items_item_list_name,
+            items_item_list_index,
+            items_promotion_id,
+            items_promotion_name,
+            items_creative_name,
+            items_creative_slot
+        )
+        SELECT
+            TRY_CAST(LEFT(event_date, 8) AS DATE) AS event_date,
+            event_timestamp,
+            event_name,
+            event_params_key,
+            event_params_value_string_value,
+            event_params_value_int_value,
+            event_params_value_float_value,
+            event_params_value_double_value,
+            event_previous_timestamp,
+            event_value_in_usd,
+            event_bundle_sequence_id,
+            event_server_timestamp_offset,
+            user_id,
+            user_pseudo_id,
+            privacy_info_analytics_storage,
+            privacy_info_ads_storage,
+            privacy_info_uses_transient_token,
+            user_properties_key,
+            user_properties_value_string_value,
+            user_properties_value_int_value,
+            user_properties_value_float_value,
+            user_properties_value_double_value,
+            user_properties_value_set_timestamp_micros,
+            user_first_touch_timestamp,
+            user_ltv_revenue,
+            user_ltv_currency,
+            device_category,
+            device_mobile_brand_name,
+            device_mobile_model_name,
+            device_mobile_marketing_name,
+            device_mobile_os_hardware_model,
+            device_operating_system,
+            device_operating_system_version,
+            device_vendor_id,
+            device_advertising_id,
+            COALESCE(device_language, 'Uncategorized') AS device_language,
+            device_is_limited_ad_tracking,
+            device_time_zone_offset_seconds,
+            device_web_info_browser,
+            device_web_info_browser_version,
+            geo_continent,
+            geo_sub_continent,
+            geo_country,
+            geo_region,
+            geo_city,
+            geo_metro,
+            app_info_id,
+            app_info_version,
+            app_info_install_store,
+            app_info_firebase_app_id,
+            app_info_install_source,
+
+            COALESCE(traffic_source_medium, '(none)')   AS traffic_source_medium,
+            COALESCE(traffic_source_name, '(direct)')   AS traffic_source_name,
+            COALESCE(traffic_source_source, '(direct)') AS traffic_source_source,
+
+            stream_id,
+            platform,
+            event_dimensions_hostname,
+            ecommerce_total_item_quantity,
+            ecommerce_purchase_revenue_in_usd,
+            ecommerce_purchase_revenue,
+            ecommerce_refund_value_in_usd,
+            ecommerce_refund_value,
+            ecommerce_shipping_value_in_usd,
+            ecommerce_shipping_value,
+            ecommerce_tax_value_in_usd,
+            ecommerce_tax_value,
+            ecommerce_unique_items,
+            ecommerce_transaction_id,
+            items_item_id,
+            items_item_name,
+            items_item_brand,
+            items_item_variant,
+            items_item_category,
+            items_item_category2,
+            items_item_category3,
+            items_item_category4,
+            items_item_category5,
+
+            ISNULL(items_price_in_usd, 0)        AS items_price_in_usd,
+            ISNULL(items_price, 0)               AS items_price,
+            ISNULL(items_quantity, 0)            AS items_quantity,
+            ISNULL(items_item_revenue_in_usd, 0) AS items_item_revenue_in_usd,
+            ISNULL(items_item_revenue, 0)        AS items_item_revenue,
+            ISNULL(items_item_refund_in_usd, 0)  AS items_item_refund_in_usd,
+            ISNULL(items_item_refund, 0)         AS items_item_refund,
+
+            items_coupon,
+            items_affiliation,
+            items_location_id,
+            items_item_list_id,
+            items_item_list_name,
+            items_item_list_index,
+            items_promotion_id,
+            items_promotion_name,
+            items_creative_name,
+            items_creative_slot
+        FROM bronze.google_analytics_data;
+
+        SET @end_time = GETDATE();
+        PRINT '>> Load Duration: ' + CAST(DATEDIFF(ss, @start_time, @end_time) AS VARCHAR) + ' sec';
+        PRINT '>> ----------';
+
+        SET @batch_end_time = GETDATE();
+        PRINT '=================================================='
+        PRINT '>> Silver Layer Load Completed Successfully.'
+        PRINT '>> Total Execution Time: ' + CAST(DATEDIFF(ss, @batch_start_time, @batch_end_time) AS VARCHAR) + ' sec'
+        PRINT '=================================================='
+
+    END TRY
+    BEGIN CATCH
+        PRINT '=================================================='
+        PRINT 'ERROR OCCURRED DURING SILVER LAYER LOAD'
+        PRINT 'Error Message: ' + ERROR_MESSAGE();
+        PRINT '=================================================='
+    END CATCH
+END;
+GO

@@ -9,6 +9,7 @@ Rather than focusing on back-end ERP inventory, this project models **front-end 
 
 ## Architecture & Data Lineage
 
+```text
 [ Raw GA4 Event CSV ]
 │
 ▼
